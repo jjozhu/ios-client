@@ -1,6 +1,7 @@
 
 package com.reactlibrary;
 
+import android.app.Activity;
 import android.app.Application;
 import android.util.Log;
 
