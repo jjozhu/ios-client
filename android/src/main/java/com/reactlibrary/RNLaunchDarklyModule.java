@@ -74,8 +74,10 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
     }
 
     // Update the ldClient user
-    if (user != null && ldClient != null) {
-      ldClient.identify(user);
+    if (ldClient != null) {
+      if (user != null){
+        ldClient.identify(user);
+      }
       return;
     }
 
