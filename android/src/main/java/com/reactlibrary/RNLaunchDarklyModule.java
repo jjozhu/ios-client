@@ -63,14 +63,21 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
       userBuilder = userBuilder.custom("organization", options.getString("organization"));
     }
 
-    if (user != null && ldClient != null) {
-      user = userBuilder.build();
-      ldClient.identify(user);
+    user = userBuilder.build();
 
-      return;
+    if (ldClient == null) {
+      try {
+        ldClient = LDClient.get();
+      } catch (LaunchDarklyException e) {
+        Log.d("RNLaunchDarklyModule", "ldClient has not been initialized");
+      }
     }
 
-    user = userBuilder.build();
+    // Update the ldClient user
+    if (user != null && ldClient != null) {
+      ldClient.identify(user);
+      return;
+    }
 
     Activity currentActivity = getCurrentActivity();
     if (currentActivity == null) {
@@ -79,7 +86,6 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
     }
 
     Application application = currentActivity.getApplication();
-
     if (application != null) {
       ldClient = LDClient.init(application, ldConfig, user, 5);
     } else {
@@ -111,12 +117,17 @@ public class RNLaunchDarklyModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void boolVariation(String flagName, Callback callback) {
-    Boolean variationResult = ldClient.boolVariation(flagName, false);
+    boolean fallback = false;
+    if (ldClient == null)
+      callback.invoke(fallback);
+    Boolean variationResult = ldClient.boolVariation(flagName, fallback);
     callback.invoke(variationResult);
   }
 
   @ReactMethod
   public void stringVariation(String flagName, String fallback, Callback callback) {
+    if (ldClient == null)
+      callback.invoke(fallback);
     String variationResult = ldClient.stringVariation(flagName, fallback);
     callback.invoke(variationResult);
   }
